@@ -5,25 +5,17 @@ import {
   firestorePlugin
 } from 'vuefire'
 
-import {
-  auth,
-  db
-} from './firebase'
 import App from "./App.vue";
 import router from "./router";
+import store from "./store";
 
 Vue.config.productionTip = false;
+
 Vue.use(VueAxios, axios)
 Vue.use(firestorePlugin)
 
-console.log(db.collection("saves"))
-
-let app
-auth.onAuthStateChanged(() => {
-  if (!app) {
-    app = new Vue({
-      router,
-      render: h => h(App)
-    }).$mount("#app");
-  }
-})
+new Vue({
+  router,
+  store,
+  render: h => h(App)
+}).$mount("#app");
