@@ -1,18 +1,26 @@
 <template>
   <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js App" />
+    <Emulator msg="Welcome to Your Vue.js App" />
   </div>
 </template>
 
 <script>
 // @ is an alias to /src
-import HelloWorld from "@/components/HelloWorld.vue";
+import Emulator from "@/components/Emulator.vue";
+import { auth } from "@/firebase";
 
 export default {
   name: "Home",
   components: {
-    HelloWorld
-  }
+    Emulator,
+  },
+  data() {
+    return {
+      user: null,
+    };
+  },
+  mounted: function () {
+    console.log(auth.currentUser);
+  },
 };
 </script>
