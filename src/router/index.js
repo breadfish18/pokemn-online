@@ -2,6 +2,10 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
 
+import {
+  auth
+} from "@/firebase"
+
 Vue.use(VueRouter);
 
 const routes = [{
@@ -13,13 +17,19 @@ const routes = [{
     path: "/login",
     name: "Login",
     component: () =>
-      import( /* webpackChunkName: "about" */ "../views/Login.vue")
+      import( /* webpackChunkName: "auth" */ "../views/Login.vue"),
+    meta: {
+      requiresGuest: true
+    }
   },
   {
     path: "/signup",
     name: "Signup",
     component: () =>
-      import( /* webpackChunkName: "about" */ "../views/Signup.vue")
+      import( /* webpackChunkName: "auth" */ "../views/Signup.vue"),
+    meta: {
+      requiresGuest: true
+    }
   },
 ];
 
@@ -28,5 +38,19 @@ const router = new VueRouter({
   base: process.env.BASE_URL,
   routes
 });
+
+router.beforeEach((to, from, next) => {
+  if (to.matched.some(record => record.meta.requiresGuest)) {
+    if (auth.currentUser) {
+      next({
+        path: "/"
+      })
+    } else {
+      next()
+    }
+  } else {
+    next()
+  }
+})
 
 export default router;

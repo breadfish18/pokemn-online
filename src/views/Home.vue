@@ -1,5 +1,6 @@
 <template>
   <div class="home">
+    <button v-if="loggedIn" @click="logout">Logout</button>
     <Emulator msg="Welcome to Your Vue.js App" />
   </div>
 </template>
@@ -16,11 +17,15 @@ export default {
   },
   data() {
     return {
-      user: null,
+      loggedIn: !!auth.currentUser,
     };
   },
-  mounted: function () {
-    console.log(auth.currentUser);
+  methods: {
+    logout: function () {
+      auth.signOut().then(() => {
+        this.$router.push("/login");
+      });
+    },
   },
 };
 </script>

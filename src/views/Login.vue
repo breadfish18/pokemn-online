@@ -1,9 +1,12 @@
 <template>
   <div class="login">
-    <h3>Sign In</h3>
-    <input v-model="email" type="text" placeholder="Email" /><br />
-    <input v-model="password" type="password" placeholder="Password" /><br />
-    <button @click="login">Sign In</button>
+    <b-field label="Email">
+      <b-input v-model="email"></b-input>
+    </b-field>
+    <b-field label="Password">
+      <b-input v-model="password" type="password"></b-input>
+    </b-field>
+    <b-button type="is-primary" @click="login">Sign In</b-button>
   </div>
 </template>
 
@@ -22,13 +25,13 @@ export default {
     login: function () {
       auth.signInWithEmailAndPassword(this.email, this.password).then(
         (user) => {
-          alert("Signed in", user);
+          alert(`Logged in as: ${user.user.email}`);
+          this.$router.push("/");
         },
         (err) => {
-          alert(err);
+          alert(err.message);
         }
       );
-      this.$router.replace("/");
     },
   },
 };

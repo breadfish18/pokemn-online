@@ -2,13 +2,14 @@
 /* eslint-disable no-undef */
 "use strict";
 
+// import decode from "@/util/decode"
+
 import {
-    db,
-    auth
+    auth,
+    db
 } from "@/firebase"
 
 var MODE_LOCAL = "local";
-var MODE_DRIVE = "drive";
 
 
 function VBASaves(emscriptenModule) {
@@ -74,15 +75,15 @@ VBASaves.prototype.hardCommit = function (romCode, uint8Array) {
     }
     try {
         localStorage[this.localStoragePrefix + romCode] = window.btoa(binary);
+
+        // decode.findSave(binary)
         db.collection("saves").doc(auth.currentUser.uid).set({
-            data: window.btoa(binary)
+            data: window.btoa(binary),
+            // name: decode.readString(binary, decode.findSave(binary))
+            // gender: uint8Array[0x08] ? "female" : "male"
         })
-        console.log(db.collection("saves"))
     } catch (e) {
         console.log(e)
-        if (window.isShittyLocalstorage) {
-            return; // User is already warned.
-        }
         if (this.lastWarningTime < Date.now() - 5000) {
             this.lastWarningTime = Date.now();
             console.error("Unable to save because the storage quota is exceeded. Try opening a new gba.ninja tab and deleting some saves, then save again.");

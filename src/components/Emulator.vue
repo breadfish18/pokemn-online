@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>hello</h1>
+    <h1>Emulator</h1>
     <button @click="loadRom()">Load rom</button>
     <div class="pixels"></div>
   </div>
@@ -13,15 +13,21 @@ import app from "@/emulator/appEntry.js";
 import axios from "axios";
 import { auth, db } from "@/firebase";
 
-console.log(app);
 export default {
   name: "Emulator",
+  data() {
+    return {
+      loggedIn: !!auth.currentUser,
+    };
+  },
   mounted: async function () {
-    const snapshot = await db
-      .collection("saves")
-      .doc(auth.currentUser.uid)
-      .get();
-    localStorage["VBAsave_BPEE"] = snapshot.data().data;
+    if (this.loggedIn) {
+      const snapshot = await db
+        .collection("saves")
+        .doc(auth.currentUser.uid)
+        .get();
+      localStorage["VBAsave_BPEE"] = snapshot.data().data;
+    }
     window.gbaninja = {
       onRuntimeInitialized: function () {
         console.log("emu ready");

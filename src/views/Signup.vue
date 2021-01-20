@@ -20,10 +20,11 @@ export default {
     signUp: function () {
       auth.createUserWithEmailAndPassword(this.email, this.password).then(
         (user) => {
-          alert("Account created", user);
+          alert(`Account created: ${user.user.email}`);
+          this.$router.push("/");
         },
         (err) => {
-          alert(err);
+          alert(err.message);
         }
       );
     },
