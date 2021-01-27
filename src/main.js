@@ -1,5 +1,5 @@
 import Vue from "vue";
-import Buefy from 'buefy'
+// import Buefy from 'buefy'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 import {
@@ -14,13 +14,14 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 
-import 'buefy/dist/buefy.css'
+// import 'buefy/dist/buefy.css'
+import "./assets/css/tailwind.css"
 
 Vue.config.productionTip = false;
 
 Vue.use(VueAxios, axios)
 Vue.use(firestorePlugin)
-Vue.use(Buefy)
+// Vue.use(Buefy)
 
 let app
 auth.onAuthStateChanged(() => {

@@ -2,12 +2,16 @@
 /* eslint-disable no-undef */
 "use strict";
 
-// import decode from "@/util/decode"
+import decode from "@/util/decode"
 
 import {
     auth,
     db
 } from "@/firebase"
+
+import {
+    saveAs
+} from "./FileSaver"
 
 var MODE_LOCAL = "local";
 
@@ -76,9 +80,12 @@ VBASaves.prototype.hardCommit = function (romCode, uint8Array) {
     try {
         localStorage[this.localStoragePrefix + romCode] = window.btoa(binary);
 
-        // decode.findSave(binary)
+        // window.binary = uint8Array;
+        decode.findSave(uint8Array)
+        decode.findSave(this.getSave(romCode))
         db.collection("saves").doc(auth.currentUser.uid).set({
             data: window.btoa(binary),
+            game: romCode
             // name: decode.readString(binary, decode.findSave(binary))
             // gender: uint8Array[0x08] ? "female" : "male"
         })
@@ -153,7 +160,7 @@ VBASaves.prototype.exportSave = function (romCode) {
     var blob = new Blob([save], {
         contentType: "application/octet-stream"
     });
-    // saveAs(blob, romCode + " " + require("./romCodeToEnglish")(romCode) + ".sav", true);
+    saveAs(blob, romCode + ".sav", true);
 };
 
 VBASaves.prototype.deleteSave = function (romCode) {

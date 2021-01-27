@@ -2,6 +2,7 @@
   <div>
     <h1>Emulator</h1>
     <button @click="loadRom()">Load rom</button>
+    <Modal v-if="!loaded" :progress="emuScriptProgress"></Modal>
     <div class="pixels"></div>
   </div>
 </template>
@@ -12,12 +13,18 @@
 import app from "@/emulator/appEntry.js";
 import axios from "axios";
 import { auth, db } from "@/firebase";
+import Modal from "@/components/Modal.vue";
 
 export default {
   name: "Emulator",
+  components: {
+    Modal,
+  },
   data() {
     return {
       loggedIn: !!auth.currentUser,
+      loaded: false,
+      emuScriptProgress: 0,
     };
   },
   mounted: async function () {
@@ -193,16 +200,31 @@ export default {
   },
   methods: {
     loadEmuModule: function () {
-      axios({ url: "emu.js", responseType: "text" }).then((res) => {
+      this.loaded = false;
+      axios({
+        url: "emu.js",
+        responseType: "text",
+        onDownloadProgress: (progress) => {
+          console.log(progress);
+          this.emuScriptProgress = (progress.loaded / progress.total) * 100;
+          if (progress.loaded === progress.total) this.loaded = true;
+        },
+      }).then((res) => {
         const script = document.createElement("script");
         script.text = res.data;
         document.head.appendChild(script);
       });
     },
     loadRom: function () {
+      this.loaded = false;
       axios({
         url: "emerald.gba",
         responseType: "arraybuffer",
+        onDownloadProgress: (progress) => {
+          console.log(progress);
+          this.emuScriptProgress = (progress.loaded / progress.total) * 100;
+          if (progress.loaded === progress.total) this.loaded = true;
+        },
       }).then((res) => {
         const _romBuffer8 = new Uint8Array(res.data);
         this.loadRomFromBuffer(_romBuffer8);

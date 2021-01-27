@@ -79,24 +79,20 @@ const decode = {
     0xFF: ""
 }
 
-function readString(data, address) {
-    let decoded = "";
-    for (let i = 0; i < 7; i++) {
-        console.log(address + i)
-        console.log(data[address + i])
-        decoded += decode[data[address + i]]
-    }
-    console.log(decoded)
-    // if (data[address])
-}
-
-function findSave(data) {
-    for (let i = 0; data[i] === 0x00; i++) {
-        console.log(i)
-        return (i)
-    }
-}
 export default {
-    readString,
-    findSave
+    readString: function (data, address) {
+        let decoded = "";
+        for (let i = 0; i < 7; i++) {
+            console.log(address + i)
+            console.log(data[address + i])
+            decoded += decode[data[address + i]]
+        }
+        console.log(decoded)
+    },
+    findSave: function (data) {
+        for (let i = 0; i < data.byteLength; i++) {
+            if (data[i] === 0xBB && data[i + 1] === 0xCC && data[i + 2] === 0xC3 && data[i + 3] === 0xFF && data[i + 4] === 0xFF && data[i + 5] === 0xFF && data[i + 6] === 0xFF && data[i + 7] === 0xFF)
+                console.log(i)
+        }
+    }
 };
