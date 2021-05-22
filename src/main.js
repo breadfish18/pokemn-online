@@ -1,35 +1,27 @@
-import Vue from "vue";
-// import Buefy from 'buefy'
+import {
+  createApp
+} from "vue";
 import axios from 'axios'
 import VueAxios from 'vue-axios'
-import {
-  firestorePlugin
-} from 'vuefire'
-
-import {
-  auth
-} from "./firebase"
 
 import App from "./App.vue";
 import router from "./router";
-import store from "./store";
+import firebase from 'firebase/app';
 
-// import 'buefy/dist/buefy.css'
-import "./assets/css/tailwind.css"
+import './assets/styles/tailwind.css';
 
-Vue.config.productionTip = false;
+const firebaseConfig = {
+  apiKey: "AIzaSyAIMbWZR3rEfpDbMM7-3kK89fVfB7y2ES0",
+  authDomain: "pokemn-online.firebaseapp.com",
+  projectId: "pokemn-online",
+  storageBucket: "pokemn-online.appspot.com",
+  messagingSenderId: "487653301458",
+  appId: "1:487653301458:web:6da6e1fd3a24f02b01a10b"
+};
 
-Vue.use(VueAxios, axios)
-Vue.use(firestorePlugin)
-// Vue.use(Buefy)
+firebase.initializeApp(firebaseConfig);
 
-let app
-auth.onAuthStateChanged(() => {
-  if (!app) {
-    app = new Vue({
-      router,
-      store,
-      render: h => h(App)
-    }).$mount("#app");
-  }
-})
+createApp(App)
+  .use(router)
+  .use(VueAxios, axios)
+  .mount("#app");

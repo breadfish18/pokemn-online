@@ -1,14 +1,8 @@
-# Todo List
+# TODO
 
-- [x] Loading progress bar
-- [ ] Show game saves
-- [ ] Google auth
-- [ ] Control remapping
-- [ ] Different games
-- [ ] GB & GBC
-- [ ] Volume slider
+Todo for pokemn-online
 
-## Production
+### Todo
 
-- [ ] Ads
-- [ ] Analytics
+- [ ] Implement emulator into Emulator component
+- [ ] Add screen rendering to emulator 

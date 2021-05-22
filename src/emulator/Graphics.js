@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
 (function () {
     "use strict";
 
@@ -206,8 +204,8 @@
         //            canvas.style.left = canvas.style.right = offset + "px";
         //            canvas.style.height = "100%";
         //        }
-        canvas.width = 720;
-        canvas.height = 480;
+        canvas.width = 960;
+        canvas.height = 640;
         this.gl.viewport(0, 0, canvas.width, canvas.height);
     };
 
