@@ -2,7 +2,6 @@
   <div class="home">
     <button v-if="loggedIn" @click="logout">Logout</button>
     <Emulator msg="Welcome to Your Vue.js App" />
-
   </div>
 </template>
 

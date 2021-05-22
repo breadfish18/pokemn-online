@@ -6,58 +6,59 @@ var VBAInput = require("./Input");
 var isRunning = false;
 var isPaused = false;
 
+window.init = function() {
+  document.querySelector(".pixels").innerHTML =
+    '<canvas width="240" height="160"></canvas>';
 
+  window.vbaGraphics = new VBAGraphics(
+    window.gbaninja,
+    document.querySelector("canvas")
+  );
+  var res = window.vbaGraphics.initScreen();
 
-window.init = function () {
+  if (!res) {
+    window.vbaGraphics = null;
+    document.querySelector(".pixels").innerHTML =
+      "<p style='margin: 20px;'>You need to enable WebGL</p>";
+    return;
+  }
 
-    document.querySelector(".pixels").innerHTML = '<canvas width="240" height="160"></canvas>';
+  window.vbaGraphics.drawFrame();
 
-    window.vbaGraphics = new VBAGraphics(window.gbaninja, document.querySelector("canvas"));
-    var res = window.vbaGraphics.initScreen();
+  window.vbaSound = new VBASound(window.gbaninja);
+  window.vbaSaves = new VBASaves(window.gbaninja);
+  window.vbaInput = new VBAInput(window.gbaninja);
 
-    if (!res) {
-        window.vbaGraphics = null;
-        document.querySelector(".pixels").innerHTML = "<p style='margin: 20px;'>You need to enable WebGL</p>";
-        return;
-    }
+  document.querySelector(".pixels").style.display = "none";
 
-    window.vbaGraphics.drawFrame();
-
-    window.vbaSound = new VBASound(window.gbaninja);
-    window.vbaSaves = new VBASaves(window.gbaninja);
-    window.vbaInput = new VBAInput(window.gbaninja);
-
-    document.querySelector(".pixels").style.display = "none";
-
-    window.doPerfCalc();
-
+  window.doPerfCalc();
 };
 
+window.start = function() {
+  if (window.isRunning) {
+    throw new Error("Already started");
+  }
 
-window.start = function () {
-    if (window.isRunning) {
-        throw new Error("Already started");
-    }
+  if (!window.vbaGraphics) {
+    // webgl is disabled
+    return;
+  }
 
-    if (!window.vbaGraphics) {
-        // webgl is disabled
-        return;
-    }
+  document.querySelector(".pixels").style.display = "block";
 
-    document.querySelector(".pixels").style.display = "block";
+  var onResize = window.vbaGraphics.onResize.bind(
+    window.vbaGraphics,
+    window.innerWidth,
+    window.innerHeight
+  );
+  window.onresize = onResize;
+  onResize();
 
-    var onResize = window.vbaGraphics.onResize.bind(window.vbaGraphics, window.innerWidth, window.innerHeight);
-    window.onresize = onResize;
-    onResize();
+  VBAInterface.VBA_start();
 
-    VBAInterface.VBA_start();
-
-    isRunning = true;
-    window.focusCheck();
-    window.doTimestep(window.frameNum + 1);
-
-
-
+  isRunning = true;
+  window.focusCheck();
+  window.doTimestep(window.frameNum + 1);
 };
 
 var GBA_CYCLES_PER_SECOND = 16780000;
@@ -76,152 +77,168 @@ vbaPerf.renderDeadlineResultsThisSecond = [];
 vbaPerf.spareAudioSamplesThisSecond = [];
 vbaPerf.audioDeadlineResultsThisSecond = [];
 
-window.doTimestep = function (frameNum, mustRender) {
+window.doTimestep = function(frameNum, mustRender) {
+  if (!hasEmuModule()) {
+    return;
+  }
 
-    if (!hasEmuModule()) {
-        return;
+  if (frameNum !== window.frameNum + 1) {
+    return;
+  }
+  window.frameNum = frameNum;
+
+  var currentTime = window.performance.now();
+  var deltaTime = currentTime - lastFrameTime;
+  var clampedDeltaTime = Math.min(50, deltaTime);
+
+  if (currentTime - window.lastFocusTime > 100 || deltaTime < 0.1) {
+    window.animationFrameRequest = window.requestAnimationFrame(function() {
+      window.doTimestep(frameNum + 1);
+    });
+    return;
+  }
+  lastFrameTime = currentTime;
+
+  if (isRunning) {
+    vbaSaves.checkSaves();
+
+    var cyclesToDo = Math.floor(
+      GBA_CYCLES_PER_SECOND / (1000 / clampedDeltaTime)
+    );
+    if (vbaSound.spareSamplesAtLastEvent > 1000) {
+      cyclesToDo -= Math.floor(
+        Math.min(cyclesToDo * 0.03, GBA_CYCLES_PER_SECOND / 10000)
+      );
+    }
+    if (vbaSound.spareSamplesAtLastEvent < 700) {
+      cyclesToDo += Math.floor(
+        Math.min(cyclesToDo * 0.03, GBA_CYCLES_PER_SECOND / 10000)
+      );
+    }
+    if (!isPaused) {
+      VBAInterface.VBA_do_cycles(cyclesToDo);
     }
 
-    if (frameNum !== window.frameNum + 1) {
-        return;
-    }
-    window.frameNum = frameNum;
+    vbaPerf.deltaTimesThisSecond.push(deltaTime);
+    vbaPerf.cyclesThisSecond.push(cyclesToDo);
 
-    var currentTime = window.performance.now();
-    var deltaTime = currentTime - lastFrameTime;
-    var clampedDeltaTime = Math.min(50, deltaTime);
-
-    if (currentTime - window.lastFocusTime > 100 || deltaTime < 0.1) {
-        window.animationFrameRequest = window.requestAnimationFrame(function () {
-            window.doTimestep(frameNum + 1);
-        });
-        return;
-    }
-    lastFrameTime = currentTime;
-
-    if (isRunning) {
-        vbaSaves.checkSaves();
-
-        var cyclesToDo = Math.floor(GBA_CYCLES_PER_SECOND / (1000 / clampedDeltaTime));
-        if (vbaSound.spareSamplesAtLastEvent > 1000) {
-            cyclesToDo -= Math.floor(Math.min(cyclesToDo * 0.03, GBA_CYCLES_PER_SECOND / 10000));
-        }
-        if (vbaSound.spareSamplesAtLastEvent < 700) {
-            cyclesToDo += Math.floor(Math.min(cyclesToDo * 0.03, GBA_CYCLES_PER_SECOND / 10000));
-        }
-        if (!isPaused) {
-            VBAInterface.VBA_do_cycles(cyclesToDo);
-        }
-
-        vbaPerf.deltaTimesThisSecond.push(deltaTime);
-        vbaPerf.cyclesThisSecond.push(cyclesToDo);
-
-        clearTimeout(window.frameTimeout);
-        window.frameTimeout = setTimeout(function () {
-            window.doTimestep(frameNum + 1);
-        }, 1000 / TARGET_FRAMERATE);
-        cancelAnimationFrame(window.animationFrameRequest);
-        window.animationFrameRequest = window.requestAnimationFrame(function () {
-            window.doTimestep(frameNum + 1);
-        });
-
-    } else if (VBAInterface.VBA_get_emulating()) {
-        VBAInterface.VBA_stop();
-        document.querySelector(".pixels").style.display = "none";
-    }
-
+    clearTimeout(window.frameTimeout);
+    window.frameTimeout = setTimeout(function() {
+      window.doTimestep(frameNum + 1);
+    }, 1000 / TARGET_FRAMERATE);
+    cancelAnimationFrame(window.animationFrameRequest);
+    window.animationFrameRequest = window.requestAnimationFrame(function() {
+      window.doTimestep(frameNum + 1);
+    });
+  } else if (VBAInterface.VBA_get_emulating()) {
+    VBAInterface.VBA_stop();
+    document.querySelector(".pixels").style.display = "none";
+  }
 };
 
 window.hasRequestedFrameButNotRendered = false;
-window.focusCheck = function () {
-    window.lastFocusTime = window.performance.now();
-    window.hasRequestedFrameButNotRendered = true;
-    window.requestAnimationFrame(window.focusCheck);
+window.focusCheck = function() {
+  window.lastFocusTime = window.performance.now();
+  window.hasRequestedFrameButNotRendered = true;
+  window.requestAnimationFrame(window.focusCheck);
 };
 
 window.perfTimer = null;
 window.lastPerfTime = performance.now();
-window.doPerfCalc = function () {
+window.doPerfCalc = function() {
+  clearTimeout(window.perfTimer);
 
-    clearTimeout(window.perfTimer);
+  var currentTime = window.performance.now();
+  var deltaTime = currentTime - lastPerfTime;
+  window.lastPerfTime = currentTime;
 
-    var currentTime = window.performance.now();
-    var deltaTime = currentTime - lastPerfTime;
-    window.lastPerfTime = currentTime;
+  if (
+    hasEmuModule() &&
+    window.vbaInput.isKeyDown(vbaInput.bindings.PERF_STATS)
+  ) {
+    // document.querySelector(".perf").style.display = "block";
 
-    if (hasEmuModule() && window.vbaInput.isKeyDown(vbaInput.bindings.PERF_STATS)) {
-
-        // document.querySelector(".perf").style.display = "block";
-
-        function samplesToMillis(samples) {
-            return Math.floor(samples / window.vbaSound.getSampleRate() * 1000) + "ms";
-        }
-
-        var romCode = window.vbaSaves.getRomCode();
-        var sumCycles = vbaPerf.cyclesThisSecond.reduce(function (a, b) {
-            return a + b;
-        }, 0);
-        var maxAudioSamples = vbaPerf.spareAudioSamplesThisSecond.reduce(function (a, b) {
-            return Math.max(a, b);
-        }, 0);
-        var minAudioSamples = vbaPerf.spareAudioSamplesThisSecond.reduce(function (a, b) {
-            return Math.min(a, b);
-        }, Infinity);
-        if (minAudioSamples === Infinity) {
-            minAudioSamples = 0;
-        }
-        var audioDeadlineResults = vbaPerf.audioDeadlineResultsThisSecond.reduce(function (a, b) {
-            if (b) {
-                a.hit++;
-            } else {
-                a.miss++;
-            }
-            return a;
-        }, {
-            hit: 0,
-            miss: 0
-        });
-        var renderDeadlineResults = vbaPerf.renderDeadlineResultsThisSecond.reduce(function (a, b) {
-            if (b) {
-                a.hit++;
-            } else {
-                a.miss++;
-            }
-            return a;
-        }, {
-            hit: 0,
-            miss: 0
-        });
-        // document.querySelector(".perf-game").innerText = (romCode ? (romCode + " ") : "") + require("./romCodeToEnglish")(romCode);
-        // document.querySelector(".perf-timesteps").innerText = Math.round(vbaPerf.cyclesThisSecond.length / (deltaTime / 1000));
-        // document.querySelector(".perf-percentage").innerText = (sumCycles / (GBA_CYCLES_PER_SECOND * (deltaTime / 1000)) * 100).toFixed(1) + "%";
-        // document.querySelector(".perf-audio-lag").innerText = samplesToMillis(minAudioSamples) + " - " + samplesToMillis(maxAudioSamples);
-        // document.querySelector(".perf-audio-deadlines").innerText = audioDeadlineResults.hit + " / " + (audioDeadlineResults.hit + audioDeadlineResults.miss);
-        // document.querySelector(".perf-render-deadlines").innerText = renderDeadlineResults.hit + " / " + (renderDeadlineResults.hit + renderDeadlineResults.miss);
-
-    } else {
-
-        // document.querySelector(".perf").style.display = "none";
-
+    function samplesToMillis(samples) {
+      return (
+        Math.floor((samples / window.vbaSound.getSampleRate()) * 1000) + "ms"
+      );
     }
 
-
-    vbaPerf.cyclesThisSecond.length = 0;
-    vbaPerf.deltaTimesThisSecond.length = 0;
-    vbaPerf.renderDeadlineResultsThisSecond.length = 0;
-    vbaPerf.spareAudioSamplesThisSecond.length = 0;
-    vbaPerf.audioDeadlineResultsThisSecond.length = 0;
-
-    window.perfTimer = setTimeout(window.doPerfCalc, 1000);
-};
-
-window.togglePause = function () {
-    if (!isRunning) {
-        return;
+    var romCode = window.vbaSaves.getRomCode();
+    var sumCycles = vbaPerf.cyclesThisSecond.reduce(function(a, b) {
+      return a + b;
+    }, 0);
+    var maxAudioSamples = vbaPerf.spareAudioSamplesThisSecond.reduce(function(
+      a,
+      b
+    ) {
+      return Math.max(a, b);
+    },
+    0);
+    var minAudioSamples = vbaPerf.spareAudioSamplesThisSecond.reduce(function(
+      a,
+      b
+    ) {
+      return Math.min(a, b);
+    },
+    Infinity);
+    if (minAudioSamples === Infinity) {
+      minAudioSamples = 0;
     }
-    isPaused = !isPaused;
+    var audioDeadlineResults = vbaPerf.audioDeadlineResultsThisSecond.reduce(
+      function(a, b) {
+        if (b) {
+          a.hit++;
+        } else {
+          a.miss++;
+        }
+        return a;
+      },
+      {
+        hit: 0,
+        miss: 0,
+      }
+    );
+    var renderDeadlineResults = vbaPerf.renderDeadlineResultsThisSecond.reduce(
+      function(a, b) {
+        if (b) {
+          a.hit++;
+        } else {
+          a.miss++;
+        }
+        return a;
+      },
+      {
+        hit: 0,
+        miss: 0,
+      }
+    );
+    // document.querySelector(".perf-game").innerText = (romCode ? (romCode + " ") : "") + require("./romCodeToEnglish")(romCode);
+    // document.querySelector(".perf-timesteps").innerText = Math.round(vbaPerf.cyclesThisSecond.length / (deltaTime / 1000));
+    // document.querySelector(".perf-percentage").innerText = (sumCycles / (GBA_CYCLES_PER_SECOND * (deltaTime / 1000)) * 100).toFixed(1) + "%";
+    // document.querySelector(".perf-audio-lag").innerText = samplesToMillis(minAudioSamples) + " - " + samplesToMillis(maxAudioSamples);
+    // document.querySelector(".perf-audio-deadlines").innerText = audioDeadlineResults.hit + " / " + (audioDeadlineResults.hit + audioDeadlineResults.miss);
+    // document.querySelector(".perf-render-deadlines").innerText = renderDeadlineResults.hit + " / " + (renderDeadlineResults.hit + renderDeadlineResults.miss);
+  } else {
+    // document.querySelector(".perf").style.display = "none";
+  }
+
+  vbaPerf.cyclesThisSecond.length = 0;
+  vbaPerf.deltaTimesThisSecond.length = 0;
+  vbaPerf.renderDeadlineResultsThisSecond.length = 0;
+  vbaPerf.spareAudioSamplesThisSecond.length = 0;
+  vbaPerf.audioDeadlineResultsThisSecond.length = 0;
+
+  window.perfTimer = setTimeout(window.doPerfCalc, 1000);
 };
 
-window.scheduleStop = function () {
-    isRunning = false;
+window.togglePause = function() {
+  if (!isRunning) {
+    return;
+  }
+  isPaused = !isPaused;
+};
+
+window.scheduleStop = function() {
+  isRunning = false;
 };

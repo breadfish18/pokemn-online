@@ -1,98 +1,107 @@
 /* eslint-disable no-unused-vars */
 const decode = {
-    0x00: " ",
-    0xA1: "0",
-    0xA2: "1",
-    0xA3: "2",
-    0xA4: "3",
-    0xA5: "4",
-    0xA6: "5",
-    0xA7: "6",
-    0xA8: "7",
-    0xA9: "8",
-    0xAA: "9",
-    0xAB: "!",
-    0xAC: "?",
-    0xAD: ".",
-    0xAE: "-",
-    0xB0: "...",
-    0xB1: "“",
-    0xB2: "”",
-    0xB3: "‘",
-    0xB4: "’",
-    0xB5: "♂",
-    0xB6: "♀",
-    0xB8: ",",
-    0xBA: "/",
-    0xBB: "A",
-    0xBC: "B",
-    0xBD: "C",
-    0xBE: "D",
-    0xBF: "E",
-    0xC0: "F",
-    0xC1: "G",
-    0xC2: "H",
-    0xC3: "I",
-    0xC4: "J",
-    0xC5: "K",
-    0xC6: "L",
-    0xC7: "M",
-    0xC8: "N",
-    0xC9: "O",
-    0xCA: "P",
-    0xCB: "Q",
-    0xCC: "R",
-    0xCD: "S",
-    0xCE: "T",
-    0xCF: "U",
-    0xD0: "V",
-    0xD1: "W",
-    0xD2: "X",
-    0xD3: "Y",
-    0xD4: "Z",
-    0xD5: "a",
-    0xD6: "b",
-    0xD7: "c",
-    0xD8: "d",
-    0xD9: "e",
-    0xDA: "f",
-    0xDB: "g",
-    0xDC: "h",
-    0xDD: "i",
-    0xDE: "j",
-    0xDF: "k",
-    0xE0: "l",
-    0xE1: "m",
-    0xE2: "n",
-    0xE3: "o",
-    0xE4: "p",
-    0xE5: "q",
-    0xE6: "r",
-    0xE7: "s",
-    0xE8: "t",
-    0xE9: "u",
-    0xEA: "v",
-    0xEB: "w",
-    0xEC: "x",
-    0xED: "y",
-    0xEE: "z",
-    0xFF: ""
-}
+  0x00: " ",
+  0xa1: "0",
+  0xa2: "1",
+  0xa3: "2",
+  0xa4: "3",
+  0xa5: "4",
+  0xa6: "5",
+  0xa7: "6",
+  0xa8: "7",
+  0xa9: "8",
+  0xaa: "9",
+  0xab: "!",
+  0xac: "?",
+  0xad: ".",
+  0xae: "-",
+  0xb0: "...",
+  0xb1: "“",
+  0xb2: "”",
+  0xb3: "‘",
+  0xb4: "’",
+  0xb5: "♂",
+  0xb6: "♀",
+  0xb8: ",",
+  0xba: "/",
+  0xbb: "A",
+  0xbc: "B",
+  0xbd: "C",
+  0xbe: "D",
+  0xbf: "E",
+  0xc0: "F",
+  0xc1: "G",
+  0xc2: "H",
+  0xc3: "I",
+  0xc4: "J",
+  0xc5: "K",
+  0xc6: "L",
+  0xc7: "M",
+  0xc8: "N",
+  0xc9: "O",
+  0xca: "P",
+  0xcb: "Q",
+  0xcc: "R",
+  0xcd: "S",
+  0xce: "T",
+  0xcf: "U",
+  0xd0: "V",
+  0xd1: "W",
+  0xd2: "X",
+  0xd3: "Y",
+  0xd4: "Z",
+  0xd5: "a",
+  0xd6: "b",
+  0xd7: "c",
+  0xd8: "d",
+  0xd9: "e",
+  0xda: "f",
+  0xdb: "g",
+  0xdc: "h",
+  0xdd: "i",
+  0xde: "j",
+  0xdf: "k",
+  0xe0: "l",
+  0xe1: "m",
+  0xe2: "n",
+  0xe3: "o",
+  0xe4: "p",
+  0xe5: "q",
+  0xe6: "r",
+  0xe7: "s",
+  0xe8: "t",
+  0xe9: "u",
+  0xea: "v",
+  0xeb: "w",
+  0xec: "x",
+  0xed: "y",
+  0xee: "z",
+  0xff: "",
+};
 
 export default {
-    readString: function (data, address) {
-        let decoded = "";
-        for (let i = 0; i < 7; i++) {
-            console.log(address + i)
-            console.log(data[address + i])
-            decoded += decode[data[address + i]]
-        }
-        console.log(decoded)
-    },
-    findSave: function (data) {
-        for (let i = 0; i < data.byteLength; i++) {
-            if (data[i] === 0xBB && data[i + 1] === 0xCC && data[i + 2] === 0xC3 && data[i + 3] === 0xFF && data[i + 4] === 0xFF && data[i + 5] === 0xFF && data[i + 6] === 0xFF && data[i + 7] === 0xFF)
-                console.log(i)
-        }
+  readString: function(data, address) {
+    let decoded = "";
+    for (let i = 0; i < 7; i++) {
+      console.log(address + i);
+      console.log(data[address + i]);
+      decoded += decode[data[address + i]];
     }
+    console.log(decoded);
+  },
+  findSave: function(data) {
+    for (let i = 0; i < data.byteLength; i++) {
+      if (
+        data[i] === 0xbb &&
+        data[i + 1] === 0xcc &&
+        data[i + 2] === 0xc3 &&
+        data[i + 3] === 0xff &&
+        data[i + 4] === 0xff &&
+        data[i + 5] === 0xff &&
+        data[i + 6] === 0xff &&
+        data[i + 7] === 0xff
+      )
+        console.log(i);
+    }
+  },
 };
